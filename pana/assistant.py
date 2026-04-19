@@ -70,7 +70,7 @@ def _dispatch(analytics: PanaAnalytics, name: str, args: dict):
         return {"error": str(e)}
 
 
-async def responder(pregunta: str, id_negocio: str) -> str:
+async def responder(pregunta: str, id_negocio: str) -> tuple[str, str]:
     model = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
     client = _get_client()
 
@@ -106,7 +106,7 @@ async def responder(pregunta: str, id_negocio: str) -> str:
                 "Puedes preguntarme cosas como: "
                 "¿Cuánto vendí hoy?, ¿Quiénes son mis mejores caseritos?, "
                 "¿En qué gasté esta semana?, ¿Cuánto me quedó limpio?"
-            )
+            ), ""
         tool_calls = retry_choice.message.tool_calls
         messages.append(retry_choice.message)
     else:
@@ -129,10 +129,11 @@ async def responder(pregunta: str, id_negocio: str) -> str:
         max_tokens=200,
     )
 
-    return final.choices[0].message.content or "No pude procesar tu consulta. Intenta de nuevo, mijo."
+    intencion = tool_calls[0].function.name if tool_calls else ""
+    return final.choices[0].message.content or "No pude procesar tu consulta. Intenta de nuevo, mijo.", intencion
 
 
-async def sql_responder(pregunta: str, id_negocio: str) -> str:
+async def sql_responder(pregunta: str, id_negocio: str) -> tuple[str, str]:
     """
     Alternativa a responder() usando Text-to-SQL para precisión exacta.
     El LLM genera SQL → SQLite ejecuta → LLM redacta respuesta.
@@ -180,10 +181,10 @@ SQL:"""
         return (
             f"No pude procesar esa consulta, caserito. "
             f"Intenta preguntar de otra forma. (Error interno: {e})"
-        )
+        ), ""
 
     if resultado_df.empty:
-        return "No encontré datos para esa consulta en tu negocio, mijo."
+        return "No encontré datos para esa consulta en tu negocio, mijo.", ""
 
     # PASO 3: LLM redacta la respuesta en español ecuatoriano
     respuesta_prompt = f"""Eres Pana Financiero, el asistente financiero de {nombre}.
@@ -226,4 +227,4 @@ Responde:"""
         max_tokens=200,
     )
 
-    return final_response.choices[0].message.content or "No pude procesar tu consulta. Intenta de nuevo, mijo."
+    return final_response.choices[0].message.content or "No pude procesar tu consulta. Intenta de nuevo, mijo.", ""

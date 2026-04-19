@@ -34,6 +34,7 @@ class AskRequest(BaseModel):
 class AskResponse(BaseModel):
     respuesta: str
     mensaje_carga: str = ""
+    intencion: str = ""
 
 
 @app.get("/")
@@ -54,8 +55,8 @@ async def ask(body: AskRequest):
         raise HTTPException(status_code=400, detail="id_negocio requerido")
     try:
         from pana.loading_messages import get_mensaje_carga
-        respuesta = await responder(body.pregunta, body.id_negocio)
-        return AskResponse(respuesta=respuesta, mensaje_carga=get_mensaje_carga())
+        respuesta, intencion = await responder(body.pregunta, body.id_negocio)
+        return AskResponse(respuesta=respuesta, mensaje_carga=get_mensaje_carga(), intencion=intencion)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -73,19 +74,19 @@ async def ask_sql(body: AskRequest):
     try:
         from pana.assistant import sql_responder
         from pana.loading_messages import get_mensaje_carga
-        respuesta = await sql_responder(body.pregunta, body.id_negocio)
-        return AskResponse(respuesta=respuesta, mensaje_carga=get_mensaje_carga())
+        respuesta, intencion = await sql_responder(body.pregunta, body.id_negocio)
+        return AskResponse(respuesta=respuesta, mensaje_carga=get_mensaje_carga(), intencion=intencion)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 class GraficoRequest(BaseModel):
-    respuesta: str
+    texto: str
     mensaje_carga: str = ""
 
 @app.post("/api/grafico")
 async def grafico(body: GraficoRequest):
-    if not body.respuesta.strip():
+    if not body.texto.strip():
         return {}
     try:
         import json as json_lib
@@ -106,7 +107,7 @@ Ejemplos de lo que debes devolver:
 - Si no hay ningún número: {{}}
 
 Texto a analizar:
-{body.respuesta}"""
+{body.texto}"""
 
         response = await client.chat.completions.create(
             model=model,
