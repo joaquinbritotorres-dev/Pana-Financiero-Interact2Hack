@@ -276,4 +276,28 @@ TOOLS = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "ultima_transaccion",
+            "description": (
+                "Devuelve la última transacción registrada con fecha y hora exacta. "
+                "Úsala cuando el usuario pregunta cuál fue su última venta, "
+                "último ingreso, último movimiento, o qué fue lo último que vendió. "
+                "Ejemplos: 'cuál fue mi última venta', 'dime la última transacción', "
+                "'qué fue lo último que entró', 'última venta con fecha y hora', "
+                "'cuándo fue mi última venta', 'qué fue lo último que me compraron'"
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "tipo": {
+                        "type": "string",
+                        "enum": ["ingreso", "egreso", "todos"],
+                        "description": "'ingreso' para última venta, 'egreso' para último gasto, 'todos' para cualquier movimiento.",
+                    }
+                },
+            },
+        },
+    },
 ]
