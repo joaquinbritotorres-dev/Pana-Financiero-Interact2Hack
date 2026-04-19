@@ -271,9 +271,9 @@ class PanaAnalytics:
             return {"total": 0, "num_tx": 0, "top_categorias": [], "sin_comentario": {"num_tx": 0, "monto": 0}}
 
         if periodo == "semana":
-            start, end = self._week_range(0)
+            start, end = self._week_range_aligned(0)
         else:
-            start, end = self._month_range(0)
+            start, end = self._month_range_aligned(0)
 
         chunk = self._egresos(self._filter_period(self.df, start, end))
         if chunk.empty:
@@ -282,28 +282,36 @@ class PanaAnalytics:
         total = round(float(chunk["monto"].sum()), 2)
         num_tx = int(len(chunk))
 
-        con_com = chunk[chunk["comentarios_transaccion"].astype(str).str.strip() != ""]
+        con_com = chunk[chunk["comentarios_transaccion"].astype(str).str.strip() != ""].copy()
         sin_com = chunk[chunk["comentarios_transaccion"].astype(str).str.strip() == ""]
 
-        # extraer palabras clave (quitar stopwords básicas)
-        stopwords = {"de", "la", "el", "en", "a", "para", "con", "por", "y", "e", "del", "los", "las", "un", "una"}
-        word_monto: dict[str, float] = {}
-        word_count: dict[str, int] = {}
-        for _, row in con_com.iterrows():
-            words = re.findall(r"[a-záéíóúñ]+", row["comentarios_transaccion"].lower())
-            words = [w for w in words if w not in stopwords and len(w) > 2]
-            for w in set(words):
-                word_monto[w] = word_monto.get(w, 0) + float(row["monto"])
-                word_count[w] = word_count.get(w, 0) + 1
+        import unicodedata
 
-        top_cats = sorted(word_monto.items(), key=lambda x: x[1], reverse=True)[:5]
+        def _norm(s: str) -> str:
+            s = unicodedata.normalize("NFD", str(s).lower())
+            s = "".join(c for c in s if unicodedata.category(c) != "Mn")
+            s = re.sub(r"[^a-z0-9\s]", " ", s)
+            return re.sub(r"\s+", " ", s).strip()
+
+        con_com["_categoria"] = con_com["comentarios_transaccion"].apply(_norm)
+
+        grp = con_com.groupby("_categoria").agg(
+            monto=("monto", "sum"),
+            num_tx=("monto", "count"),
+            ejemplo=("comentarios_transaccion", "first"),
+        ).reset_index()
+        grp = grp.sort_values("monto", ascending=False).head(5)
 
         return {
             "total": total,
             "num_tx": num_tx,
             "top_categorias": [
-                {"nombre": w, "monto": round(m, 2), "num_tx": word_count[w]}
-                for w, m in top_cats
+                {
+                    "nombre": row["ejemplo"],
+                    "monto": round(float(row["monto"]), 2),
+                    "num_tx": int(row["num_tx"]),
+                }
+                for _, row in grp.iterrows()
             ],
             "sin_comentario": {
                 "num_tx": int(len(sin_com)),
