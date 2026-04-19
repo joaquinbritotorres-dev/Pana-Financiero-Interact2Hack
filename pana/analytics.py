@@ -372,7 +372,7 @@ class PanaAnalytics:
             self.df["comentarios_transaccion"].astype(str).str.lower().str.contains(q, na=False)
             | self.df["id_cliente"].astype(str).str.lower().str.contains(q, na=False)
         )
-        found = self.df[mask].head(limite)
+        found = self.df[mask].sort_values("fecha", ascending=False).head(limite)
         if found.empty:
             return []
 
