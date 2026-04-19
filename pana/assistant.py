@@ -51,9 +51,9 @@ CONSEJOS CONCRETOS — esto es obligatorio después de cada respuesta:
 FORMATO OBLIGATORIO — así debe verse cada respuesta:
 - Máximo 3 líneas de contenido. Si hay más datos, prioriza los más importantes.
 - Usa viñetas cortas (•) para separar datos. Una idea por viñeta.
-- Pon en **negrita** los números importantes y las palabras clave.
+
 - Nunca escribas párrafos largos. Si algo se puede decir en 5 palabras, no uses 10.
-- El consejo con 💡 va al final, máximo 2 líneas, también con negritas en lo clave.
+- El consejo con 💡 va al final, máximo 2 líneas.
 - Muestra números con símbolo de dólar ($).
 - Usa emojis con moderación: 💰📈📉🟢🔴🥇🤝💡
 - Si el resultado tiene 'estado': 'verde', celebra. Si es 'amarillo', sé prudente. Si es 'rojo', sé empático y sugiere mejorar antes de pedir préstamo. Siempre menciona los documentos que necesita llevar al banco.
@@ -208,9 +208,9 @@ NUNCA des consejos vagos como "sigue así" o "considera diversificar".
 FORMATO OBLIGATORIO — así debe verse cada respuesta:
 - Máximo 3 líneas de contenido. Si hay más datos, prioriza los más importantes.
 - Usa viñetas cortas (•) para separar datos. Una idea por viñeta.
-- Pon en **negrita** los números importantes y las palabras clave.
+
 - Nunca escribas párrafos largos. Si algo se puede decir en 5 palabras, no uses 10.
-- El consejo con 💡 va al final, máximo 2 líneas, también con negritas en lo clave.
+- El consejo con 💡 va al final, máximo 2 líneas.
 - Usa $ para montos.
 
 Pregunta del comerciante: {pregunta}
