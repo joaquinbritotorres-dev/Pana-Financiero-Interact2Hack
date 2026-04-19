@@ -212,7 +212,9 @@ class PanaAnalytics:
         if ing.empty:
             return {"franjas_pico": [], "hora_mas_floja": None}
 
-        ing["hora_int"] = ing["hora"].str.split(":").str[0].astype(int, errors="ignore")
+        ing["hora_int"] = pd.to_numeric(
+            ing["hora"].str.split(":").str[0], errors="coerce"
+        ).fillna(0).astype(int)
         by_hour = ing.groupby("hora_int")["monto"].sum()
         total = by_hour.sum()
 
