@@ -77,3 +77,57 @@ async def ask_sql(body: AskRequest):
         return AskResponse(respuesta=respuesta, mensaje_carga=get_mensaje_carga())
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+class GraficoRequest(BaseModel):
+    respuesta: str
+    mensaje_carga: str = ""
+
+@app.post("/api/grafico")
+async def grafico(body: GraficoRequest):
+    if not body.respuesta.strip():
+        return {}
+    try:
+        import json as json_lib
+        from openai import AsyncOpenAI
+        import os
+        client = AsyncOpenAI(api_key=os.environ["OPENAI_API_KEY"])
+        model = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
+
+        prompt = f"""Analiza este texto financiero y extrae SOLO los pares de valores numéricos comparativos que encuentres.
+Devuelve SOLO un JSON válido con las etiquetas como claves y los números como valores float.
+Sin explicaciones, sin markdown, solo el JSON.
+
+Ejemplos de lo que debes devolver:
+- Si el texto compara esta semana vs semana pasada: {{"esta semana": 153.90, "semana pasada": 291.74}}
+- Si compara hoy vs ayer: {{"hoy": 58.54, "ayer": 72.30}}
+- Si compara este mes vs mes anterior: {{"este mes": 1240.50, "mes anterior": 980.00}}
+- Si no hay comparación clara (solo un valor): {{"total": 153.90}}
+- Si no hay ningún número: {{}}
+
+Texto a analizar:
+{body.respuesta}"""
+
+        response = await client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0,
+            max_tokens=100,
+        )
+
+        raw = response.choices[0].message.content or "{}"
+        raw = raw.strip()
+        if raw.startswith("```"):
+            raw = raw.split("```")[1]
+            if raw.startswith("json"):
+                raw = raw[4:]
+        raw = raw.strip()
+
+        data = json_lib.loads(raw)
+        if not isinstance(data, dict):
+            return {}
+        result = {k: float(v) for k, v in list(data.items())[:5]
+                  if isinstance(v, (int, float))}
+        return result
+    except Exception:
+        return {}
