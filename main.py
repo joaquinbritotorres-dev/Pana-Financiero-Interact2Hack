@@ -56,3 +56,21 @@ async def ask(body: AskRequest):
         return AskResponse(respuesta=respuesta)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/ask/sql", response_model=AskResponse)
+async def ask_sql(body: AskRequest):
+    """
+    Endpoint Text-to-SQL: precisión exacta para fechas y datos puntuales.
+    El LLM genera SQL, SQLite ejecuta, el LLM solo redacta.
+    """
+    if not body.pregunta.strip():
+        raise HTTPException(status_code=400, detail="La pregunta no puede estar vacía")
+    if not body.id_negocio.strip():
+        raise HTTPException(status_code=400, detail="id_negocio requerido")
+    try:
+        from pana.assistant import sql_responder
+        respuesta = await sql_responder(body.pregunta, body.id_negocio)
+        return AskResponse(respuesta=respuesta)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
