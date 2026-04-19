@@ -126,6 +126,7 @@ async def responder(pregunta: str, id_negocio: str) -> str:
     final = await client.chat.completions.create(
         model=model,
         messages=messages,
+        max_tokens=200,
     )
 
     return final.choices[0].message.content or "No pude procesar tu consulta. Intenta de nuevo, mijo."
@@ -222,6 +223,7 @@ Responde:"""
         model=model,
         messages=[{"role": "user", "content": respuesta_prompt}],
         temperature=0.3,
+        max_tokens=200,
     )
 
     return final_response.choices[0].message.content or "No pude procesar tu consulta. Intenta de nuevo, mijo."
